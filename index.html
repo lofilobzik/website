@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PID Controller" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID Controller</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+
+        /* The Floating Control Panel */
+        #hud-controls {
+            position: absolute;
+            top: 0; 
+            left: 0;
+            
+            transform-origin: top left; 
+            
+            width: auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            pointer-events: auto; /* Allow clicking sliders */
+            user-select: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .control-group label { font-weight: bold; color: #fff; width: 20px; }
+        
+        /* Custom Slider Styling */
+        input[type=range] {
+            flex-grow: 1;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+
+        .value-display { width: 35px; text-align: right; }
+        
+        canvas {
+            touch-action: none; /* Prevents the browser from taking over touch events */
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: none;
+            color: white;
+            text-decoration: none;
+            font-family: monospace;
+            border: 1px solid white;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        /* This ensures the permanent white background only happens on Desktop */
+        @media (hover: hover) {
+            .button:hover {
+                background: white;
+                color: black;
+                box-shadow: 0 0 15px white;
+            }
+        }
+
+        /* This gives mobile users a quick "flash" when they tap, 
+        but it reverts to black immediately when they lift their finger */
+        .button:active {
+            background: white;
+            color: black;
+            box-shadow: 0 0 5px white;
+            transform: translateY(2px); /* Optional: Gives a nice "pressed" feeling */
+        }
+    </style>
+    
+</head>
+<body>
+
+    <div id="hud-controls">
+        <div style="display: grid; grid-template-columns: 1fr 1px 1fr; width: 100%; font-family: monospace; font-size: 13px;">
+            <div style="text-align: left;">
+                INST. <span id="val-inst" style="display: inline-block; width: 50px; text-align: right;">0.0</span> W
+            </div>
+            <div style="color: white;">|</div>
+            <div style="text-align: right;">
+                AVG. <span id="val-avg" style="display: inline-block; width: 50px; text-align: right;">0.0</span> W
+            </div>
+        </div>
+        <hr>
+        <div class="control-group">
+            <label>P</label>
+            <input type="range" id="sliderP" min="0" max="5" step="0.1" value="1.0">
+            <span id="valP" class="value-display">1.0</span>
+        </div>
+
+        <div class="control-group">
+            <label>I</label>
+            <input type="range" id="sliderI" min="0" max="2" step="0.01" value="0.0">
+            <span id="valI" class="value-display">0.0</span>
+        </div>
+
+        <div class="control-group">
+            <label>D</label>
+            <input type="range" id="sliderD" min="0" max="5" step="0.1" value="1.0">
+            <span id="valD" class="value-display">1.0</span>
+        </div>
+
+        <hr>
+        <a href="about.html" class="button">WHAT IS THIS?</a>
+        <button id="btn-random" class="button"> KICK </button>
+        <!-- <button id="btn-switch-mode" class="button">BTN</button> -->
+    </div>
+
+    <script type="module" src="./main.js"></script>
+</body>
+</html>

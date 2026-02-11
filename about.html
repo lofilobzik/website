@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PID Controller" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <title>PID Controller | About</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: monospace; 
+
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: gray;
+            text-decoration: none;
+            border-bottom: 1px dashed gray;
+        }
+        
+        h1, h2 {
+            color: white;
+            margin-top: 40px;
+            border-bottom: 1px solid white;
+        }
+
+        .fun-gif {
+            display: block;
+            width: 100%;
+            height: auto;
+            
+            margin: 20px 0;
+            border: 1px solid white;
+        }
+
+        @media (min-width: 768px) {
+            .fun-gif {
+                width: 40%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">← Back to Simulation</a>
+    </nav>
+
+    <main>
+        <h1>SYSTEM_DOCS_V1.0</h1>
+        <section>
+            <h2>01. PROJECT_OVERVIEW</h2>
+            <img src="/gifs/smart1.gif" class="fun-gif">
+            <p><strong>The Challenge:</strong> Control theory concepts like PID (<span style="color: #ff0000">Proportional</span>-<span style="color: #00ff00">Integral</span>-<span style="color: #0000ff">Derivative</span>) loops are often taught as abstract equations, making it difficult to visualize how tuning parameters affects physical stability.</p>
+            <p><strong>The Solution:</strong> I engineered a real-time, browser-based physics simulation. It models a control system fighting against <span style="color: yellow">stochastic disturbances</span> (random impulses) and <span style="color: cyan">constant orbital forces</span>, allowing users to intuitively "tune" the math behind the movement.</p>
+        </section>
+
+        <section>
+            <h2>02. SOFTWARE_ARCHITECTURE</h2>
+            <img src="/gifs/frustration1.gif" class="fun-gif">
+            <p>This is not a pre-made component: the physics engine and control logic were built from the ground up.</p>
+            <ul>
+                <li><strong>Frontend:</strong> Three.js (WebGL) for high-performance 3D rendering.</li>
+                <li><strong>Control Logic:</strong> Custom JavaScript implementation of the PID algorithm, featuring <em>Integral Anti-Windup</em> and <em>Derivative Smoothing</em> to handle discrete-time signal noise.</li>
+                <li><strong>Optimization:</strong> Implemented efficient render loops and low-latency state management to ensure 60FPS performance on mobile devices.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>03. INFRASTRUCTURE_&_IOT</h2>
+            <img src="/gifs/lain1.gif" class="fun-gif">
+            <p>Unlike standard cloud hosting, this project is a <strong>self-hosted hybrid system</strong> running entirely on hardware in my home lab.</p>
+            <ul>
+                <li><strong>Host:</strong> Raspberry Pi 4B (Linux/Debian).</li>
+                <li><strong>Network:</strong> Exposed securely to the public internet via a Tailscale Funnel (Reverse Proxy).</li>
+                <li><strong>Data Pipeline:</strong> A custom Python service polls a DHT22 sensor via GPIO pins and writes asynchronous telemetry data to the frontend.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>04. LIVE_TELEMETRY</h2>
+            <img src="/gifs/science1.gif" class="fun-gif">
+            <div class="callout">
+                <strong>SERVER_STATUS:</strong> ONLINE<br>
+                <strong>LOCATION:</strong> HOME_LAB // VANCOUVER<br>
+                --------------------------------<br>
+                LAB_TEMP: <span id="lab-temp" style="color: cyan;">--</span>°C<br>
+                LAB_HUM: <span id="lab-hum" style="color: cyan;">--</span>%<br>
+                CPU_LOAD: <span id="lab-cpu" style="color: cyan;">--</span>%<br>
+                RAM_LOAD: <span id="lab-ram" style="color: cyan;">--</span>%
+            </div>
+            <p style="font-size: 0.8em; color: gray;">* Telemetry updates every 5 seconds via custom JSON interface.</p>
+        </section>
+
+        <section>
+            <h2>05. LEARNING_OUTCOMES</h2>
+            <img src="/gifs/writing1.gif" class="fun-gif">
+            <p>Building this required solving several cross-domain engineering problems:</p>
+            <ul>
+                <li><strong>Control Theory:</strong> Tuned $K_p$, $K_i$, and $K_d$ gains to eliminate steady-state error without inducing oscillation.</li>
+                <li><strong>Systems Administration:</strong> Managed headless Linux deployment, file permissions, and automated build scripts.</li>
+                <li><strong>Full Stack Integration:</strong> Bridged the gap between hardware sensors (Python) and the user interface (JavaScript).</li>
+            </ul>
+        </section>
+    </main>
+
+    <script>
+        async function updateSensorData() {
+            try {
+                // We add '?t=' + Date.now() to prevent the browser from caching old data
+                const response = await fetch('sensor.json?t=' + Date.now());
+                const data = await response.json();
+                
+                document.getElementById('lab-temp').innerText = data.temp;
+                document.getElementById('lab-hum').innerText = data.hum;
+                document.getElementById('lab-cpu').innerText = data.cpu;
+                document.getElementById('lab-ram').innerText = data.ram;
+            } catch (error) {
+                console.log("Sensor offline");
+            }
+        }
+
+        // Run immediately, then every 5 seconds
+        updateSensorData();
+        setInterval(updateSensorData, 5000);
+    </script>
+</body>
+</html>
