@@ -26,6 +26,11 @@
             line-height: 1.6;
         }
 
+        nav {
+            display: flex;
+            justify-content: space-between;
+        }
+
         a {
             color: gray;
             text-decoration: none;
@@ -58,20 +63,21 @@
 <body>
     <nav>
         <a href="index.html">← Back to Simulation</a>
+        <a href="mech.html">History of Mechatronics →</a>
     </nav>
 
     <main>
         <h1>SYSTEM_DOCS_V1.0</h1>
         <section>
             <h2>01. PROJECT_OVERVIEW</h2>
-            <img src="/gifs/smart1.gif" class="fun-gif">
+            <img src="/gifs/smart1.gif" class="fun-gif" alt="smart gif">
             <p><strong>The Challenge:</strong> Control theory concepts like PID (<span style="color: #ff0000">Proportional</span>-<span style="color: #00ff00">Integral</span>-<span style="color: #0000ff">Derivative</span>) loops are often taught as abstract equations, making it difficult to visualize how tuning parameters affects physical stability.</p>
             <p><strong>The Solution:</strong> I engineered a real-time, browser-based physics simulation. It models a control system fighting against <span style="color: yellow">stochastic disturbances</span> (random impulses) and <span style="color: cyan">constant orbital forces</span>, allowing users to intuitively "tune" the math behind the movement.</p>
         </section>
 
         <section>
             <h2>02. SOFTWARE_ARCHITECTURE</h2>
-            <img src="/gifs/frustration1.gif" class="fun-gif">
+            <img src="/gifs/frustration1.gif" class="fun-gif" alt="frustration gif">
             <p>This is not a pre-made component: the physics engine and control logic were built from the ground up.</p>
             <ul>
                 <li><strong>Frontend:</strong> Three.js (WebGL) for high-performance 3D rendering.</li>
@@ -82,7 +88,7 @@
 
         <section>
             <h2>03. INFRASTRUCTURE_&_IOT</h2>
-            <img src="/gifs/lain1.gif" class="fun-gif">
+            <img src="/gifs/lain1.gif" class="fun-gif" alt="computer gif">
             <p>Unlike standard cloud hosting, this project is a <strong>self-hosted hybrid system</strong> running entirely on hardware in my home lab.</p>
             <ul>
                 <li><strong>Host:</strong> Raspberry Pi 4B (Linux/Debian).</li>
@@ -93,7 +99,7 @@
 
         <section>
             <h2>04. LIVE_TELEMETRY</h2>
-            <img src="/gifs/science1.gif" class="fun-gif">
+            <img src="/gifs/science1.gif" class="fun-gif" alt="science gif">
             <div class="callout">
                 <strong>SERVER_STATUS:</strong> ONLINE<br>
                 <strong>LOCATION:</strong> HOME_LAB // VANCOUVER<br>
@@ -108,7 +114,7 @@
 
         <section>
             <h2>05. LEARNING_OUTCOMES</h2>
-            <img src="/gifs/writing1.gif" class="fun-gif">
+            <img src="/gifs/writing1.gif" class="fun-gif" alt="writing gif">
             <p>Building this required solving several cross-domain engineering problems:</p>
             <ul>
                 <li><strong>Control Theory:</strong> Tuned $K_p$, $K_i$, and $K_d$ gains to eliminate steady-state error without inducing oscillation.</li>
