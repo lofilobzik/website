@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="PID Controller" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PID vs MPC" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
 
-    <title>PID Controller | About</title>
+    <title>PID vs MPC Control | About</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -67,28 +67,31 @@
     </nav>
 
     <main>
-        <h1>SYSTEM_DOCS_V1.0</h1>
+        <h1>SYSTEM_DOCS_V2.0</h1>
         <section>
             <h2>01. PROJECT_OVERVIEW</h2>
-            <img src="/gifs/smart1.gif" class="fun-gif" alt="smart gif">
-            <p><strong>The Challenge:</strong> Control theory concepts like PID (<span style="color: #ff0000">Proportional</span>-<span style="color: #00ff00">Integral</span>-<span style="color: #0000ff">Derivative</span>) loops are often taught as abstract equations, making it difficult to visualize how tuning parameters affects physical stability.</p>
-            <p><strong>The Solution:</strong> I engineered a real-time, browser-based physics simulation. It models a control system fighting against <span style="color: yellow">stochastic disturbances</span> (random impulses) and <span style="color: cyan">constant orbital forces</span>, allowing users to intuitively "tune" the math behind the movement.</p>
+            <!-- <img src="/gifs/smart1.webm" class="fun-gif" alt="smart gif"> -->
+            <video autoplay loop muted playsinline src="/gifs/smart1.webm" class="fun-gif" alt="smart gif"></video>
+            <p><strong>The Challenge:</strong> "Classical" control (PID) and "Modern" control (MPC) are fundamentally different philosophies. One reacts to the past; the other predicts the future. Seeing the difference in real-time is rare.</p>
+            <p><strong>The Solution:</strong> I engineered a comparative physics simulation. It allows users to switch between a standard <span style="color: cyan">PID Controller</span> and a <span style="color: #00ff00">Model Predictive Controller (MPC)</span> to visualize how they handle <span style="color: yellow">stochastic disturbances</span> and <span style="color: cyan">orbital gravity</span> differently.</p>
         </section>
 
         <section>
             <h2>02. SOFTWARE_ARCHITECTURE</h2>
-            <img src="/gifs/frustration1.gif" class="fun-gif" alt="frustration gif">
-            <p>This is not a pre-made component: the physics engine and control logic were built from the ground up.</p>
+            <!-- <img src="/gifs/frustration1.gif" class="fun-gif" alt="frustration gif"> -->
+            <video autoplay loop muted playsinline src="/gifs/frustration1.webm" class="fun-gif" alt="frustration gif"></video>
+            <p>The system now runs two distinct control engines derived from first principles:</p>
             <ul>
-                <li><strong>Frontend:</strong> Three.js (WebGL) for high-performance 3D rendering.</li>
-                <li><strong>Control Logic:</strong> Custom JavaScript implementation of the PID algorithm, featuring <em>Integral Anti-Windup</em> and <em>Derivative Smoothing</em> to handle discrete-time signal noise.</li>
-                <li><strong>Optimization:</strong> Implemented efficient render loops and low-latency state management to ensure 60FPS performance on mobile devices.</li>
+                <li><strong>PID Engine:</strong> A reactive loop using error-based feedback ($K_p$, $K_i$, $K_d$) featuring integral anti-windup to handle steady-state drift, and a low-pass filter (exponential moving average) to smooth out derivative noise on the telemetry graphs.</li>
+                <li><strong>MPC Engine:</strong> A predictive solver that looks $N$ seconds into the future. It calculates the exact force vector required to zero out velocity and position, utilizing <strong>Feedforward Cancellation</strong> to mathematically negate external wind/gravity forces before they affect the drone.</li>
+                <li><strong>Performance:</strong> Both algorithms run within the 60FPS render budget of the Three.js loop.</li>
             </ul>
         </section>
 
         <section>
             <h2>03. INFRASTRUCTURE_&_IOT</h2>
-            <img src="/gifs/lain1.gif" class="fun-gif" alt="computer gif">
+            <!-- <img src="/gifs/lain1.gif" class="fun-gif" alt="computer gif"> -->
+            <video autoplay loop muted playsinline src="/gifs/lain1.webm" class="fun-gif" alt="computer gif"></video>
             <p>Unlike standard cloud hosting, this project is a <strong>self-hosted hybrid system</strong> running entirely on hardware in my home lab.</p>
             <ul>
                 <li><strong>Host:</strong> Raspberry Pi 4B (Linux/Debian).</li>
@@ -99,7 +102,8 @@
 
         <section>
             <h2>04. LIVE_TELEMETRY</h2>
-            <img src="/gifs/science1.gif" class="fun-gif" alt="science gif">
+            <!-- <img src="/gifs/science1.gif" class="fun-gif" alt="science gif"> -->
+            <video autoplay loop muted playsinline src="/gifs/science1.webm" class="fun-gif" alt="science gif"></video>
             <div class="callout">
                 <strong>SERVER_STATUS:</strong> ONLINE<br>
                 <strong>LOCATION:</strong> HOME_LAB // VANCOUVER<br>
@@ -109,17 +113,17 @@
                 CPU_LOAD: <span id="lab-cpu" style="color: cyan;">--</span>%<br>
                 RAM_LOAD: <span id="lab-ram" style="color: cyan;">--</span>%
             </div>
-            <p style="font-size: 0.8em; color: gray;">* Telemetry updates every 5 seconds via custom JSON interface.</p>
+            <p style="font-size: 0.8em; color: gray;">* Server vitals polled every 5s. Simulation power usage (Watts) calculated real-time in client.</p>
         </section>
 
         <section>
             <h2>05. LEARNING_OUTCOMES</h2>
             <img src="/gifs/writing1.gif" class="fun-gif" alt="writing gif">
-            <p>Building this required solving several cross-domain engineering problems:</p>
+            <p>Implementing the "Duel" revealed key engineering trade-offs:</p>
             <ul>
-                <li><strong>Control Theory:</strong> Tuned $K_p$, $K_i$, and $K_d$ gains to eliminate steady-state error without inducing oscillation.</li>
-                <li><strong>Systems Administration:</strong> Managed headless Linux deployment, file permissions, and automated build scripts.</li>
-                <li><strong>Full Stack Integration:</strong> Bridged the gap between hardware sensors (Python) and the user interface (JavaScript).</li>
+                <li><strong>Efficiency vs. Complexity:</strong> PID is computationally cheap but struggles with "sag" under gravity. MPC is expensive but offers perfect tracking via feedforward physics.</li>
+                <li><strong>Systems Integration:</strong> Managed the complexity of switching control laws dynamically without destabilizing the physics engine.</li>
+                <li><strong>Full Stack:</strong> Bridged the gap between hardware sensors (Python), 3D graphics (Three.js), and real-time control logic.</li>
             </ul>
         </section>
     </main>
