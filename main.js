@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // CONFIGURATION
 const CONFIG = {
@@ -316,10 +317,12 @@ class TelemetryHUD {
 }
 
 // --- MAIN APP ---
-let scene, camera, renderer, cube, controls;
+let scene, camera, renderer, droneMesh, controls;
 let pid, mpc, telemetry, physics, powerMeter;
 let orbitArrow, impulseArrow, predictedLine; 
-let currentMode = 'PID'; 
+let currentMode = 'PID';
+let currentModel = 'CUBE';
+let mikuVisual, cubeVisual;
 
 // State
 let lastTime = performance.now();
@@ -333,6 +336,16 @@ let trail;
 
 function init() {
     scene = new THREE.Scene();
+
+    // soft white light everywhere so she isn't completely swallowed by the void
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); 
+    scene.add(ambientLight);
+
+    // a strong directional light to give the 3d geometry some actual depth
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    directionalLight.position.set(5, 10, 7);
+    scene.add(directionalLight);
+
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 1, 10);
     scene.add(camera);
@@ -346,15 +359,43 @@ function init() {
     controls.target.set(0, 0, 0);
 
     // Objects
-    cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true }));
-    scene.add(cube);
+
+    // 1. Create the permanent physics container immediately
+    droneMesh = new THREE.Group();
+    scene.add(droneMesh);
+
+    // 2. Create the classic wireframe cube and put it in the container
+    cubeVisual = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1), 
+        new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+    );
+    cubeVisual.visible = true; // cube is the default
+    droneMesh.add(cubeVisual);
+
+    // 3. Load the visual miku mesh asynchronously
+    const loader = new GLTFLoader();
+    loader.load(
+        'models/hatsune_miku_plushie.glb',
+        function (gltf) {
+            mikuVisual = gltf.scene;
+            mikuVisual.scale.set(2, 2, 2); 
+            mikuVisual.position.set(0, -0.5, 0);
+            mikuVisual.visible = false; // start hidden until user toggles
+            droneMesh.add(mikuVisual);
+        },
+        undefined, 
+        function (error) {
+            console.error('failed to load miku:', error);
+        }
+    );
+
     scene.add(new THREE.GridHelper(100, 50, 0x444444, 0x222222));
 
-    // Arrows
+    // Arrows - these now safely attach to the empty Group immediately
     orbitArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(), 0, 0x00ffff);
     impulseArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 0, 0xffff00);
-    cube.add(orbitArrow);
-    cube.add(impulseArrow);
+    droneMesh.add(orbitArrow);
+    droneMesh.add(impulseArrow);
 
     // MPC Line
     const lineGeo = new THREE.BufferGeometry();
@@ -416,8 +457,8 @@ function setupUI() {
         hud.classList.toggle('mpc-mode', isMPC);
         
         toggleBtn.innerText = `MODE: ${currentMode}`;
-        toggleBtn.style.color = isMPC ? '#00ff00' : 'cyan';
-        toggleBtn.style.borderColor = isMPC ? '#00ff00' : 'cyan';
+        toggleBtn.style.color = isMPC ? '#00ff00' : 'white';
+        toggleBtn.style.borderColor = isMPC ? '#00ff00' : 'white';
 
         hrs.forEach(hr => hr.style.borderColor = isMPC ? '#004400' : '#444');
 
@@ -428,6 +469,23 @@ function setupUI() {
         const kick = new THREE.Vector3((Math.random()-0.5), (Math.random()-0.5), (Math.random()-0.5));
         physics.velocity.add(kick.normalize().multiplyScalar(20.0));
     });
+
+    const btnModel = document.getElementById('btn-model');
+    if (btnModel) {
+        btnModel.addEventListener('click', () => {
+            currentModel = currentModel === 'MIKU' ? 'CUBE' : 'MIKU';
+            const isMiku = currentModel === 'MIKU';
+
+            // toggle visibility safely (miku might still be downloading if you click too fast on a slow network)
+            if (mikuVisual) mikuVisual.visible = isMiku;
+            if (cubeVisual) cubeVisual.visible = !isMiku;
+
+            // update button styling
+            btnModel.innerText = `MDL: ${currentModel}`;
+            btnModel.style.color = isMiku ? 'cyan' : 'white';
+            btnModel.style.borderColor = isMiku ? 'cyan' : 'white';
+        });
+    }
 }
 
 function triggerDisturbance() {
@@ -442,9 +500,9 @@ function triggerDisturbance() {
 function updateTrail() {
     trailPositions.copyWithin(0, 3);
     const i = (trailLength - 1) * 3;
-    trailPositions[i] = cube.position.x;
-    trailPositions[i+1] = cube.position.y;
-    trailPositions[i+2] = cube.position.z;
+    trailPositions[i] = droneMesh.position.x;
+    trailPositions[i+1] = droneMesh.position.y;
+    trailPositions[i+2] = droneMesh.position.z;
     trail.geometry.attributes.position.needsUpdate = true;
 }
 
@@ -503,16 +561,16 @@ function animate() {
     physics.acceleration.add(controlOut.output);
     physics.update(dt);
 
-    cube.position.copy(physics.position);
-    cube.rotation.x += 0.5 * dt;
-    cube.rotation.y += 0.3 * dt;
+    droneMesh.position.copy(physics.position);
+    // droneMesh.rotation.x += 0.5 * dt;
+    droneMesh.rotation.y += 0.3 * dt;
 
     telemetry.update(controlOut, currentMode, physics);
     
     const orbMag = orbit.length();
     orbitArrow.visible = orbMag > 0.1;
     if (orbitArrow.visible) {
-        const d = orbit.clone().normalize().applyQuaternion(cube.quaternion.clone().invert());
+        const d = orbit.clone().normalize().applyQuaternion(droneMesh.quaternion.clone().invert());
         orbitArrow.setDirection(d);
         orbitArrow.setLength(orbMag * 0.5);
     }
@@ -520,7 +578,7 @@ function animate() {
     const impMag = disturbance.length();
     impulseArrow.visible = impMag > 0.1;
     if (impulseArrow.visible) {
-        const d = disturbance.clone().normalize().applyQuaternion(cube.quaternion.clone().invert());
+        const d = disturbance.clone().normalize().applyQuaternion(droneMesh.quaternion.clone().invert());
         impulseArrow.setDirection(d);
         impulseArrow.setLength(impMag * 0.5);
     }
