@@ -322,7 +322,14 @@ let pid, mpc, telemetry, physics, powerMeter;
 let orbitArrow, impulseArrow, predictedLine; 
 let currentMode = 'PID';
 let currentModel = 'CUBE';
-let mikuVisual, cubeVisual;
+let mikuVisual, cubeVisual, potetoVisual;
+
+// --- POTETO SPAM DETECTOR STATE ---
+let switchTimestamps = [];
+const SPAM_THRESHOLD = 5; 
+const TIME_WINDOW = 2000; 
+let isPotetoSpawning = false;
+let isButtonLocked = false;
 
 // State
 let lastTime = performance.now();
@@ -386,6 +393,17 @@ function init() {
         undefined, 
         function (error) {
             console.error('failed to load miku:', error);
+        }
+    );
+
+    loader.load(
+        'models/poteto.glb',
+        function (gltf) {
+            potetoVisual = gltf.scene;
+            potetoVisual.scale.set(0.1, 0.1, 0.1); 
+            potetoVisual.position.set(0, -0.5, 0);
+            potetoVisual.visible = false; // hidden by default
+            droneMesh.add(potetoVisual);
         }
     );
 
@@ -473,14 +491,54 @@ function setupUI() {
     const btnModel = document.getElementById('btn-model');
     if (btnModel) {
         btnModel.addEventListener('click', () => {
+            if (isButtonLocked) {
+                console.log("no bueno: button is on cooldown. look at the poteto.");
+                return; // block the click entirely
+            }
+            
+            if (potetoVisual && potetoVisual.visible) {
+                // hide the poteto
+                potetoVisual.visible = false;
+                isPotetoSpawning = false;
+                
+                // figure out which model we were on and show it
+                const isMiku = currentModel === 'MIKU';
+                if (mikuVisual) mikuVisual.visible = isMiku;
+                if (cubeVisual) cubeVisual.visible = !isMiku;
+
+                // reset the button text/color to the normal state
+                btnModel.innerText = `MDL: ${currentModel}`;
+                btnModel.style.color = isMiku ? 'cyan' : 'white';
+                btnModel.style.borderColor = isMiku ? 'cyan' : 'white';
+                
+                // clear the spam array so they have a clean slate
+                switchTimestamps = []; 
+                return; // EXIT EARLY! do not run the spam detection below.
+            }
+            
+            // --- SPAM DETECTION LOGIC ---
+            const now = Date.now();
+            switchTimestamps.push(now);
+            switchTimestamps = switchTimestamps.filter(t => now - t < TIME_WINDOW);
+
+            if (switchTimestamps.length >= SPAM_THRESHOLD) {
+                executePotetoProtocol();
+                switchTimestamps = []; // reset so it doesn't loop forever
+                return; // exit early, skip normal model switching
+            }
+            // ----------------------------
+
+            // normal logic resumes here
             currentModel = currentModel === 'MIKU' ? 'CUBE' : 'MIKU';
             const isMiku = currentModel === 'MIKU';
 
-            // toggle visibility safely (miku might still be downloading if you click too fast on a slow network)
+            // ensure poteto is hidden if they go back to normal clicking
+            if (potetoVisual) potetoVisual.visible = false;
+            isPotetoSpawning = false;
+
             if (mikuVisual) mikuVisual.visible = isMiku;
             if (cubeVisual) cubeVisual.visible = !isMiku;
 
-            // update button styling
             btnModel.innerText = `MDL: ${currentModel}`;
             btnModel.style.color = isMiku ? 'cyan' : 'white';
             btnModel.style.borderColor = isMiku ? 'cyan' : 'white';
@@ -504,6 +562,70 @@ function updateTrail() {
     trailPositions[i+1] = droneMesh.position.y;
     trailPositions[i+2] = droneMesh.position.z;
     trail.geometry.attributes.position.needsUpdate = true;
+}
+
+// --- EASTER EGG PROTOCOLS ---
+function executePotetoProtocol() {
+    // hide the boring models
+    if (cubeVisual) cubeVisual.visible = false;
+    if (mikuVisual) mikuVisual.visible = false;
+    
+    // deploy the poteto
+    if (potetoVisual) {
+        potetoVisual.visible = true;
+        potetoVisual.scale.set(0.1, 0.1, 0.1); 
+        isPotetoSpawning = true; 
+    }
+    
+    fireConfetti();
+    
+    // hijack the ui button AND lock it
+    const btnModel = document.getElementById('btn-model');
+    if(btnModel) {
+        btnModel.innerText = "MDL: POTETO!!";
+        btnModel.style.color = "#ff0015"; 
+        btnModel.style.borderColor = "#ff0015";
+        
+        btnModel.style.cursor = "not-allowed";
+
+        btnModel.classList.add("shaking-poteto");
+        
+        // ENGAGE THE LOCK
+        isButtonLocked = true;
+
+        // release the lock after 2500ms (2.5 seconds)
+        setTimeout(() => {
+            isButtonLocked = false;
+            
+            // KILL THE RESONANCE (remove the css class)
+            btnModel.classList.remove("shaking-poteto");
+            
+            // --- THE NOMINAL RESET ---
+            // setting these to "" removes the javascript inline-style override
+            // and lets your css stylesheet take full control again.
+            btnModel.style.color = ""; 
+            btnModel.style.borderColor = "";
+            btnModel.style.cursor = "";
+            
+            // prompt the user to clear the anomaly
+            btnModel.innerText = "MDL: DISMISS POTETO"; 
+        }, 2500);
+    }
+}
+
+function fireConfetti() {
+    // verify the html script tag is actually loaded
+    if (typeof confetti !== 'undefined') {
+        confetti({
+            particleCount: 200,
+            spread: 120,
+            startVelocity: 40,
+            origin: { y: 0.6 }, 
+            colors: ['#ff0015', '#ffffff', '#ffb6c1'] 
+        });
+    } else {
+        console.warn("no bueno: confetti script not found in html!");
+    }
 }
 
 function animate() {
@@ -560,6 +682,20 @@ function animate() {
 
     physics.acceleration.add(controlOut.output);
     physics.update(dt);
+
+    // poteto
+    if (isPotetoSpawning && potetoVisual) {
+        // smoothly scale up to size 1.0
+        potetoVisual.scale.lerp(new THREE.Vector3(1, 1, 1), 0.15);
+        
+        // add some chaotic zy0x-tier spinning while it spawns
+        potetoVisual.rotation.y += 15 * dt; 
+        
+        // stop the animation loop once it reaches full size
+        if (potetoVisual.scale.x > 0.95) {
+            isPotetoSpawning = false; 
+        }
+    }
 
     droneMesh.position.copy(physics.position);
     // droneMesh.rotation.x += 0.5 * dt;
