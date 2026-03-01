@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PID vs MPC" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+
+    <title>PID vs MPC Control | History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: monospace; 
+
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        a {
+            color: gray;
+            text-decoration: none;
+            border-bottom: 1px dashed gray;
+        }
+        
+        h1, h2 {
+            color: white;
+            margin-top: 40px;
+            border-bottom: 1px solid white;
+            text-transform: uppercase;
+        }
+
+        .fun-gif {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border: 1px solid white;
+        }
+
+        .meta-tag {
+            color: #00ff00;
+            font-size: 0.8em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .fun-gif {
+                width: 40%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">← Back to Simulation</a>
+        <a href="about.html">About Page →</a>
+    </nav>
+
+    <main>
+        <h1>MECH_HIST_1.0+<span id="current-date"></span></h1>
+        
+        <p><strong>DEFINITION:</strong> "The synergetic integration of physical systems with information technology and complex decision-making in the design, manufacture, and operation of industrial products."</p>
+        <p style="opacity: 0.7; font-size: 0.9em; margin-top: -10px;">— IEEE/ASME Transactions on Mechatronics (1996)</p>
+
+        <section>
+            <h2>ORIGIN CODE: THE YASKAWA TRADEMARK</h2>
+            <span class="meta-tag">STATUS: LEGACY FOUNDATION</span>
+            <p>The field owes its name to a 1969 neologism by <strong>Yaskawa Electric Corporation</strong>. Originally a registered trademark combining "Mechanism" and "Electronics," Yaskawa released the rights to the public domain, allowing the term to become the global standard for electro-mechanical integration. This open-source philosophy accelerated the transition from purely mechanical designs to the servo-controlled systems of the 1970s.</p>
+        </section>
+
+        <section>
+            <h2>SYSTEM ARCHITECTURE: INTELLIGENT CONTROL</h2>
+            <span class="meta-tag">STATUS: PROCESSING POWER</span>
+            <p>The 1980s introduced the microprocessor, fundamentally altering machine logic. This era moved beyond simple actuation to "Intelligent Control," where systems could model their environment in real-time.</p>
+            <ul>
+                <li><strong>Automotive Safety:</strong> The integration of sensors and processors enabled ABS (Anti-lock Braking Systems) and traction control, allowing vehicles to actively modulate friction forces during operation.</li>
+                <li><strong>Optomechatronics:</strong> A new sub-discipline emerged by integrating high-precision optics with mechanical control, essential for the development of laser systems and optical storage.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>SCALING DOWN: THE MEMS REVOLUTION</h2>
+            <span class="meta-tag">STATUS: MICRO-SCALE</span>
+            <p>Advancements in semiconductor photolithography allowed engineers to shrink mechanical systems to the microscopic scale. This "Bottom-Up" approach created <strong>Micro-Electro-Mechanical Systems (MEMS)</strong>—tiny, integrated devices that combine sensors, actuators, and electronics on a single silicon substrate. This technology is the backbone of modern accelerometers and gyroscopes found in every smartphone.</p>
+        </section>
+
+        <section>
+            <h2>CONNECTIVITY: THE NETWORKED MACHINE</h2>
+            <span class="meta-tag">STATUS: DECENTRALIZED</span>
+            <p>Post-1990, the standalone machine became obsolete. The focus shifted to "Networked Mechatronics," where the value lies in communication capability.</p>
+            <ul>
+                <li><strong>Tele-operation:</strong> High-bandwidth networks enabled precise remote control of robotic systems in hazardous environments.</li>
+                <li><strong>Smart Manufacturing:</strong> Machines began to communicate laterally, coordinating production lines autonomously without centralized mainframe intervention.</li>
+            </ul>
+        </section>
+    </main>
+
+    <script>
+    (function() {
+        const d = new Date();
+        const year = d.getFullYear();
+        // getMonth() is 0-indexed (0=Jan), so we add 1 and pad with '0'
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        document.getElementById('current-date').textContent = `${year}${month}${day}`;
+    })();
+    </script> 
+</body>
+</html>

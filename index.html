@@ -2,127 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="PID Controller" />
-    <link rel="manifest" href="/site.webmanifest" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PID Controller</title>
+    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="PID vs MPC" />
+    <link rel="manifest" href="/favicon/site.webmanifest" />
+
+    <title>PID vs MPC Control</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; }
 
-        /* The Floating Control Panel */
+        /* --- HUD CONTAINER --- */
         #hud-controls {
             position: absolute;
-            top: 0; 
-            left: 0;
             
-            transform-origin: top left; 
+            /* Default Floating Position (Desktop & Mobile now share this logic) */
+            bottom: 20px; 
+            left: 20px; 
+            width: 280px;
             
-            width: auto;
+            transform-origin: bottom left; 
             padding: 15px;
-            background: rgba(0, 0, 0, 0.8);
+            
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid #ffffff;
             color: #ffffff;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
-            pointer-events: auto; /* Allow clicking sliders */
+            
+            pointer-events: auto;
             user-select: none;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+            z-index: 10;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box; 
+            
+            /* Round corners slightly for the floating look */
+            border-radius: 8px;
         }
 
-        .control-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
+        /* MPC Mode Styles */
+        #hud-controls.mpc-mode {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
 
-        .control-group label { font-weight: bold; color: #fff; width: 20px; }
-        
-        /* Custom Slider Styling */
-        input[type=range] {
-            flex-grow: 1;
-            margin: 0 10px;
-            cursor: pointer;
-        }
-
-        .value-display { width: 35px; text-align: right; }
-        
-        canvas {
-            touch-action: none; /* Prevents the browser from taking over touch events */
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background: none;
-            color: white;
-            text-decoration: none;
-            font-family: monospace;
-            border: 1px solid white;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-
-        /* This ensures the permanent white background only happens on Desktop */
-        @media (hover: hover) {
-            .button:hover {
-                background: white;
-                color: black;
-                box-shadow: 0 0 15px white;
+        /* --- MOBILE LAYOUT OVERRIDES --- */
+        @media (max-width: 600px) {
+            #hud-controls {
+                /* Center horizontally on mobile */
+                left: 50%;
+                transform: translateX(-50%);
+                transform-origin: center bottom;
+                
+                /* Keep it floating off the bottom */
+                bottom: max(20px, env(safe-area-inset-bottom));
+                
+                /* Stretch to fit width, but keep margins */
+                width: calc(100% - 40px);
+                max-width: 400px; /* Don't get too wide on tablets */
             }
         }
 
-        /* This gives mobile users a quick "flash" when they tap, 
-        but it reverts to black immediately when they lift their finger */
-        .button:active {
-            background: white;
-            color: black;
-            box-shadow: 0 0 5px white;
-            transform: translateY(2px); /* Optional: Gives a nice "pressed" feeling */
+        /* --- UI ELEMENTS --- */
+        .control-group {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
         }
+        .control-group label { font-weight: bold; width: 30px; }
+        
+        input[type=range] {
+            flex-grow: 1; margin: 0 10px; cursor: pointer; accent-color: white;
+        }
+
+        .mpc-slider { accent-color: #00ff00 !important; }
+        .mpc-text { color: #00ff00; }
+
+        .value-display { width: 35px; text-align: right; }
+        
+        .button {
+            display: inline-block; padding: 10px 0;
+            background: transparent; color: white;
+            text-decoration: none; font-family: monospace; font-weight: bold;
+            border: 1px solid white; cursor: pointer;
+            transition: 0.2s; text-align: center; font-size: 12px;
+        }
+
+        @media (hover: hover) {
+            .button:hover { background: white; color: black; box-shadow: 0 0 10px white; }
+        }
+        .button:active { background: #444; transform: translateY(2px); }
+
+        .power-stats {
+            display: flex; justify-content: space-between; 
+            font-size: 12px; margin-bottom: 5px; color: #ccc;
+        }
+        .power-val { color: #fff; font-weight: bold; }
     </style>
-    
 </head>
 <body>
 
     <div id="hud-controls">
-        <div style="display: grid; grid-template-columns: 1fr 1px 1fr; width: 100%; font-family: monospace; font-size: 13px;">
-            <div style="text-align: left;">
-                INST. <span id="val-inst" style="display: inline-block; width: 50px; text-align: right;">0.0</span> W
+        <div class="power-stats">
+            <div>INST: <span id="val-inst" class="power-val">0.0</span> W</div>
+            <div>|</div>
+            <div>AVG: <span id="val-avg" class="power-val">0.0</span> W</div>
+        </div>
+        
+        <hr id="main-hr" style="border-color: #444;">
+
+        <div id="pid-panel">
+            <div class="control-group">
+                <label>P</label> 
+                <input type="range" id="pid-p" min="0" max="5" step="0.1" value="1.0">
+                <span id="val-pid-p" class="value-display">1.0</span>
             </div>
-            <div style="color: white;">|</div>
-            <div style="text-align: right;">
-                AVG. <span id="val-avg" style="display: inline-block; width: 50px; text-align: right;">0.0</span> W
+            <div class="control-group">
+                <label>I</label> 
+                <input type="range" id="pid-i" min="0" max="2" step="0.01" value="0.0">
+                <span id="val-pid-i" class="value-display">0.0</span>
+            </div>
+            <div class="control-group">
+                <label>D</label> 
+                <input type="range" id="pid-d" min="0" max="5" step="0.1" value="1.0">
+                <span id="val-pid-d" class="value-display">1.0</span>
             </div>
         </div>
-        <hr>
-        <div class="control-group">
-            <label>P</label>
-            <input type="range" id="sliderP" min="0" max="5" step="0.1" value="1.0">
-            <span id="valP" class="value-display">1.0</span>
+
+        <div id="mpc-panel" style="display: none;">
+            <div class="control-group">
+                <label class="mpc-text">HZ</label> 
+                <input type="range" id="mpc-hz" class="mpc-slider" min="0.5" max="5.0" step="0.1" value="1.0">
+                <span id="val-mpc-hz" class="value-display mpc-text">1.0</span>
+            </div>
+            <div class="control-group">
+                <label class="mpc-text">FRC</label> 
+                <input type="range" id="mpc-frc" class="mpc-slider" min="5" max="50" step="1" value="20">
+                <span id="val-mpc-frc" class="value-display mpc-text">20</span>
+            </div>
+            <div class="control-group" style="opacity: 0;">
+                <label>--</label> <input type="range" disabled> <span>--</span>
+            </div>
         </div>
 
-        <div class="control-group">
-            <label>I</label>
-            <input type="range" id="sliderI" min="0" max="2" step="0.01" value="0.0">
-            <span id="valI" class="value-display">0.0</span>
+        <hr id="bottom-hr" style="border-color: #444; margin-bottom: 15px;">
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button id="btn-toggle" class="button" style="flex: 1; color: cyan; border-color: cyan;">MODE: PID</button>
+            <button id="btn-random" class="button" style="flex: 1;">KICK</button>
         </div>
 
-        <div class="control-group">
-            <label>D</label>
-            <input type="range" id="sliderD" min="0" max="5" step="0.1" value="1.0">
-            <span id="valD" class="value-display">1.0</span>
-        </div>
-
-        <hr>
-        <a href="about.html" class="button">WHAT IS THIS?</a>
-        <button id="btn-random" class="button"> KICK </button>
+        <a href="about.html" class="button" style="display: block; width: 100%; box-sizing: border-box;">WHAT IS THIS?</a>
     </div>
 
     <script type="module" src="./main.js"></script>
